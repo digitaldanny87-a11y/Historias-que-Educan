@@ -2,10 +2,7 @@ import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
 // Initialize AI client safely.
-// We use a fallback to prevent immediate crash on module load, 
-// but calls will fail gracefully inside the functions if key is invalid.
-const apiKey = process.env.API_KEY || "dummy_key_to_prevent_crash";
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const bookSchema: Schema = {
   type: Type.OBJECT,
