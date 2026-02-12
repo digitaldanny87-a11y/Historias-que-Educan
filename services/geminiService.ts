@@ -2,8 +2,9 @@ import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
 // Initialize AI client safely.
-// We use a fallback to prevent immediate crash, but calls will fail if key is missing.
-const apiKey = process.env.API_KEY || "";
+// We use a fallback to prevent immediate crash on module load, 
+// but calls will fail gracefully inside the functions if key is invalid.
+const apiKey = process.env.API_KEY || "dummy_key_to_prevent_crash";
 const ai = new GoogleGenAI({ apiKey });
 
 const bookSchema: Schema = {
@@ -74,7 +75,7 @@ const bookSchema: Schema = {
 
 // Función auxiliar para generar imagen
 async function generateCoverImage(prompt: string, style: string): Promise<string | undefined> {
-  if (!apiKey) return undefined;
+  if (!process.env.API_KEY) return undefined;
   
   try {
     const response = await ai.models.generateContent({
@@ -100,7 +101,7 @@ async function generateCoverImage(prompt: string, style: string): Promise<string
 }
 
 export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBook> => {
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
     throw new Error("API Key no configurada. Por favor configura VITE_API_KEY o API_KEY en tu entorno.");
   }
 
@@ -178,7 +179,7 @@ export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBoo
 };
 
 export const createTopicChatSession = (): Chat => {
-  if (!apiKey) {
+  if (!process.env.API_KEY) {
       // Return a dummy object or throw a handled error to prevent crash
       throw new Error("API Key missing for Chat");
   }
