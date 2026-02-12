@@ -173,7 +173,16 @@ export const createTopicChatSession = (): Chat => {
     model: 'gemini-3-flash-preview',
     config: {
       temperature: 0.7,
-      systemInstruction: `Eres un asistente experto en pedagogía infantil. Ayuda a definir objetivos de aprendizaje claros y sencillos.`
+      systemInstruction: `Eres un asistente experto en pedagogía infantil. Ayuda a definir objetivos de aprendizaje claros y sencillos.
+      
+      IMPORTANTE: Cuando sugieras temas específicos para agregar al perfil del niño, al final de tu respuesta (después de tu mensaje amigable) INCLUYE SIEMPRE un bloque JSON con un array de strings sugiriendo temas cortos (máximo 2 palabras por tema).
+      
+      Ejemplo de formato de respuesta:
+      "¡Claro! A los niños de esa edad les encantan los dinosaurios T-Rex. ¿Te gustaría agregar eso?"
+      \`\`\`json
+      ["Dinosaurios", "Volcanes", "Fósiles"]
+      \`\`\`
+      `
     }
   });
 };
