@@ -38,60 +38,59 @@ const ActivityRenderer: React.FC<ActivityRendererProps> = ({ page }) => {
     switch (page.type) {
       case ActivityType.STORY:
         return (
-          <div className="relative">
-            <div className="prose prose-xl text-gray-800 mx-auto leading-loose font-medium">
-               <button 
-                  onClick={() => speakText(page.content)}
-                  className={`float-right ml-6 mb-4 w-24 h-24 rounded-full flex items-center justify-center text-4xl shadow-lg border-4 transition-all hover:scale-110 ${isSpeaking ? 'bg-red-100 border-red-400 animate-pulse' : 'bg-yellow-100 border-yellow-400'}`}
-                  title={isSpeaking ? "Detener lectura" : "Leer en voz alta"}
-               >
-                  {isSpeaking ? '🤫' : '🗣️'}
-               </button>
-               <p className="whitespace-pre-line">{page.content}</p>
+          <div className="flex flex-col h-full gap-6">
+            {/* Image Section */}
+            <div className="flex-1 w-full relative min-h-[250px] md:min-h-[350px]">
+                <div className="absolute inset-0 bg-gray-100 rounded-3xl shadow-inner border-4 border-white flex items-center justify-center overflow-hidden transform rotate-1 hover:rotate-0 transition-all duration-500">
+                    {page.imageBase64 ? (
+                        <img 
+                            src={`data:image/jpeg;base64,${page.imageBase64}`} 
+                            alt={page.imageDescription || "Ilustración del cuento"} 
+                            className="w-full h-full object-cover"
+                        />
+                    ) : (
+                        <div className="text-center p-4 text-gray-400">
+                            <span className="text-6xl mb-2 block">🖼️</span>
+                            <span className="text-xs uppercase font-bold tracking-widest">Creando ilustración...</span>
+                        </div>
+                    )}
+                </div>
             </div>
-          </div>
-        );
 
-      case ActivityType.MATH:
-        return (
-          <div className="flex flex-col items-center justify-center py-8">
-             <div className="bg-blue-50 p-10 rounded-[3rem] border-8 border-blue-200 mb-8 w-full text-center shadow-xl transform rotate-1">
-                <div className="inline-block bg-white px-6 py-2 rounded-full text-blue-500 font-black text-xl mb-4 shadow-sm border border-blue-100 tracking-wider">
-                   RETOS MATEMÁTICOS
+            {/* Text Section */}
+            <div className="flex-shrink-0 bg-white/50 backdrop-blur-sm p-4 rounded-2xl">
+                <div className="prose prose-lg md:prose-xl text-gray-800 mx-auto leading-relaxed font-medium text-justify md:text-left">
+                <button 
+                    onClick={() => speakText(page.content)}
+                    className={`float-right ml-4 mb-2 w-14 h-14 md:w-16 md:h-16 rounded-full flex items-center justify-center text-2xl md:text-3xl shadow-lg border-4 transition-all hover:scale-110 ${isSpeaking ? 'bg-red-100 border-red-400 animate-pulse' : 'bg-yellow-100 border-yellow-400'}`}
+                    title={isSpeaking ? "Detener lectura" : "Leer en voz alta"}
+                >
+                    {isSpeaking ? '🤫' : '🗣️'}
+                </button>
+                <p className="whitespace-pre-line">{page.content}</p>
                 </div>
-                <p className="text-4xl md:text-5xl text-blue-900 font-black font-mono tracking-wide">{page.content}</p>
-             </div>
-             
-             <div className="w-full max-w-md bg-white p-2 rounded-2xl border-4 border-gray-200 flex gap-2 shadow-inner">
-                <div className="flex-1 h-16 border-b-4 border-gray-300 flex items-center justify-center text-gray-400 font-mono text-2xl">
-                   ?
-                </div>
-                <div className="bg-gray-100 rounded-xl px-4 flex items-center justify-center text-3xl">
-                   ✏️
-                </div>
-             </div>
-             <p className="text-gray-400 mt-2 text-sm">¡Usa un papel para resolverlo!</p>
+            </div>
           </div>
         );
 
       case ActivityType.QUIZ:
         return (
-          <div className="space-y-8 max-w-2xl mx-auto">
-            <div className="bg-indigo-50 p-6 rounded-3xl border-l-8 border-indigo-400 shadow-sm">
-               <p className="text-2xl font-bold text-indigo-900 leading-snug">{page.content}</p>
+          <div className="space-y-8 max-w-2xl mx-auto h-full flex flex-col justify-center">
+            <div className="bg-indigo-50 p-8 rounded-[2rem] border-l-8 border-indigo-400 shadow-sm relative overflow-hidden">
+               <div className="absolute top-0 right-0 p-4 opacity-10 text-8xl transform rotate-12">❓</div>
+               <p className="text-2xl md:text-3xl font-bold text-indigo-900 leading-snug relative z-10">{page.content}</p>
             </div>
             
-            <div className="grid gap-4">
+            <div className="grid gap-4 w-full">
               {page.options?.map((option, idx) => (
                 <button
                   key={idx}
                   onClick={() => {
                      if (!showAnswer) {
                         setSelectedOption(idx);
-                        // Optional: Play sound effect here if implemented
                      }
                   }}
-                  className={`w-full text-left p-6 rounded-2xl border-b-4 transition-all transform flex justify-between items-center group relative overflow-hidden ${
+                  className={`w-full text-left p-5 rounded-2xl border-b-4 transition-all transform flex justify-between items-center group relative overflow-hidden ${
                     showAnswer
                       ? option.isCorrect
                         ? 'bg-green-100 border-green-500 text-green-900 scale-105 shadow-lg'
@@ -103,8 +102,8 @@ const ActivityRenderer: React.FC<ActivityRendererProps> = ({ page }) => {
                       : 'bg-white border-gray-200 hover:border-indigo-300 hover:bg-indigo-50 hover:-translate-y-1 hover:shadow-md'
                   }`}
                 >
-                  <span className="font-bold text-xl relative z-10 flex items-center gap-3">
-                     <span className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black border-2 ${showAnswer && option.isCorrect ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-500 border-gray-200'}`}>
+                  <span className="font-bold text-xl relative z-10 flex items-center gap-4">
+                     <span className={`w-10 h-10 rounded-full flex items-center justify-center text-lg font-black border-2 shadow-sm ${showAnswer && option.isCorrect ? 'bg-green-500 text-white border-green-600' : 'bg-white text-gray-500 border-gray-200'}`}>
                         {String.fromCharCode(65 + idx)}
                      </span>
                      {option.text}
@@ -122,82 +121,39 @@ const ActivityRenderer: React.FC<ActivityRendererProps> = ({ page }) => {
                    onClick={() => setShowAnswer(true)}
                    className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-10 py-4 rounded-full font-black text-xl shadow-xl hover:shadow-2xl hover:scale-105 transition-all animate-pulse"
                  >
-                   ✨ Comprobar Respuesta ✨
+                   ✨ Comprobar ✨
                  </button>
               </div>
             )}
             
             {showAnswer && (
-               <div className={`text-center p-4 rounded-2xl animate-in fade-in slide-in-from-bottom-4 duration-500 ${page.options?.[selectedOption!]?.isCorrect ? 'bg-green-100 text-green-800' : 'bg-orange-100 text-orange-800'}`}>
-                 <p className="text-xl font-bold">
-                    {page.options?.[selectedOption!]?.isCorrect ? "¡GENIAL! ¡Eres increíble! 🎉" : "¡Casi! Inténtalo otra vez. 💪"}
+               <div className={`text-center p-6 rounded-3xl animate-in fade-in slide-in-from-bottom-4 duration-500 border-4 ${page.options?.[selectedOption!]?.isCorrect ? 'bg-green-100 text-green-800 border-green-200' : 'bg-orange-100 text-orange-800 border-orange-200'}`}>
+                 <p className="text-2xl font-black">
+                    {page.options?.[selectedOption!]?.isCorrect ? "¡EXCELENTE! 🎉" : "¡Casi! Inténtalo de nuevo. 💪"}
                  </p>
                </div>
             )}
           </div>
         );
 
-      case ActivityType.DRAWING:
-        return (
-          <div className="h-full flex flex-col items-center">
-            <div className="bg-yellow-50 px-6 py-4 rounded-full border-2 border-yellow-200 mb-6 shadow-sm transform -rotate-1">
-               <p className="text-xl text-yellow-900 font-bold italic">"{page.content}"</p>
-            </div>
-            
-            <div className="w-full flex-grow border-8 border-gray-800 rounded-3xl bg-white relative group min-h-[400px] shadow-2xl overflow-hidden">
-               {/* Drawing Paper Texture */}
-              <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/graphy.png')]"></div>
-              
-              <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-300 pointer-events-none group-hover:opacity-50 transition-opacity">
-                <span className="text-8xl mb-4 transform group-hover:scale-110 transition-transform duration-500">🎨</span>
-                <span className="text-2xl font-handwriting transform -rotate-6">¡Tu obra maestra aquí!</span>
-              </div>
-              
-              {/* Fake UI tools */}
-              <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2 opacity-50">
-                 {['🔴', '🔵', '🟢', '🟡', '⚫️'].map((c, i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gray-100 border shadow-sm flex items-center justify-center text-xs">{c}</div>
-                 ))}
-              </div>
-            </div>
-          </div>
-        );
-
-      case ActivityType.VOCABULARY:
-          return (
-              <div className="grid gap-6">
-                  <div className="bg-orange-100 p-8 rounded-[2rem] border-4 border-orange-300 relative">
-                      <div className="absolute -top-5 -left-5 bg-orange-500 text-white p-3 rounded-xl shadow-lg text-2xl transform -rotate-12">
-                         📝
-                      </div>
-                      <p className="text-2xl text-orange-900 font-bold text-center leading-loose">{page.content}</p>
-                  </div>
-                  
-                  <div className="mt-4 text-center bg-white p-6 rounded-3xl border-2 border-dashed border-gray-300">
-                      <p className="text-gray-500 mb-4 font-bold uppercase tracking-widest text-xs">Zona de Práctica</p>
-                      <p className="text-xl text-gray-700 mb-4">¡Intenta usar estas palabras en una frase súper divertida!</p>
-                      <div className="h-32 w-full bg-blue-50 rounded-xl border-b-4 border-blue-100"></div>
-                  </div>
-              </div>
-          )
-
+      // Keep default for fallback, though not used in new prompt
       default:
         return <p className="text-xl">{page.content}</p>;
     }
   };
 
   return (
-    <div className="h-full">
+    <div className="h-full flex flex-col">
       {renderContent()}
       
       {page.hint && (
-        <div className="mt-8 mx-auto max-w-lg cursor-pointer group perspective">
+        <div className="mt-4 mx-auto max-w-lg cursor-pointer group perspective w-full">
            <div className="relative transform transition-transform duration-500 preserve-3d group-hover:rotate-x-12">
-              <div className="bg-yellow-100 p-4 rounded-2xl text-yellow-800 flex items-center gap-4 border-2 border-yellow-300 shadow-lg">
-                <span className="text-4xl animate-bounce">💡</span>
-                <div>
-                   <p className="font-black uppercase text-xs text-yellow-600 mb-1">Pista Secreta</p>
-                   <p className="font-medium text-lg">{page.hint}</p>
+              <div className="bg-yellow-50 p-3 rounded-xl text-yellow-800 flex items-center gap-3 border border-yellow-200 shadow-sm hover:bg-yellow-100 transition-colors">
+                <span className="text-2xl">🤔</span>
+                <div className="flex-1">
+                   <p className="font-bold text-[10px] text-yellow-600 uppercase tracking-wider">Pregunta Mágica</p>
+                   <p className="font-medium text-sm md:text-base leading-tight">{page.hint}</p>
                 </div>
               </div>
            </div>

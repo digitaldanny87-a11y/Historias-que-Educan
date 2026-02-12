@@ -86,14 +86,14 @@ const App: React.FC = () => {
                 📺
              </div>
              <h2 className="text-2xl md:text-3xl font-black text-center text-blue-900 mb-6 flex items-center justify-center gap-3 drop-shadow-sm">
-               Mira cómo funciona la magia
+               Deja volar tu imaginación
              </h2>
              <div className="relative rounded-2xl overflow-hidden shadow-inner bg-black aspect-video border-8 border-blue-100">
                 <video 
                    controls 
                    className="w-full h-full object-cover"
                 >
-                   <source src="https://bvhbrbidsdytynfarlth.supabase.co/storage/v1/object/public/videos/2e569989882f6f036bcd2f492e410cd1_720w.mp4" type="video/mp4" />
+                   <source src="https://bvhbrbidsdytynfarlth.supabase.co/storage/v1/object/public/videos/video%20ninos%20leyendo.mp4" type="video/mp4" />
                    Tu navegador no soporta el elemento de video.
                 </video>
              </div>

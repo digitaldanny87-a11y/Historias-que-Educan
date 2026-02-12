@@ -27,6 +27,7 @@ export interface BookPage {
   hint?: string; // Optional hint
   colorTheme?: string; // Hex code or tailwind class suggestion
   imageDescription?: string; // Description of the illustration for this page
+  imageBase64?: string; // The generated image for this specific page
   visualElements?: VisualElements; // Specific pedagogical visual keys
 }
 
