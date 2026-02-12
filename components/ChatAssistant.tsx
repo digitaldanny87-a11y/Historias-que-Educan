@@ -24,8 +24,12 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onAddTopic, selectedTopic
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!chatSessionRef.current) {
-      chatSessionRef.current = createTopicChatSession();
+    try {
+      if (!chatSessionRef.current) {
+        chatSessionRef.current = createTopicChatSession();
+      }
+    } catch (e) {
+      console.error("Failed to init chat session", e);
     }
   }, []);
 
@@ -38,7 +42,8 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onAddTopic, selectedTopic
   };
 
   const parseResponse = (text: string) => {
-    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
+    // Regex flexible: allows spaces/newlines around the JSON block
+    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
     let cleanText = text;
     let suggestedTopics: string[] = [];
 
@@ -62,6 +67,10 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onAddTopic, selectedTopic
     setIsLoading(true);
 
     try {
+      if (!chatSessionRef.current) {
+         chatSessionRef.current = createTopicChatSession();
+      }
+      
       const result: GenerateContentResponse = await chatSessionRef.current.sendMessage({ message: userMsg });
       const rawText = result.text || "";
       const { cleanText, suggestedTopics } = parseResponse(rawText);

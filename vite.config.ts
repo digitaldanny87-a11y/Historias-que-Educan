@@ -11,7 +11,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     define: {
       // Polyfill process.env.API_KEY for the GenAI SDK
-      'process.env.API_KEY': JSON.stringify(env.API_KEY)
+      // Default to empty string to prevent 'undefined' crash in GoogleGenAI constructor
+      'process.env.API_KEY': JSON.stringify(env.API_KEY || '')
     }
   };
 });

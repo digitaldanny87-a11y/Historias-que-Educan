@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
+// Initialize AI client. process.env.API_KEY is replaced by Vite during build.
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const bookSchema: Schema = {
