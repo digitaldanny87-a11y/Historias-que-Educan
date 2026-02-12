@@ -4,8 +4,9 @@ import react from '@vitejs/plugin-react';
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   // Load env file based on `mode` in the current working directory.
-  // We use process.cwd() directly to avoid needing @types/node
-  const env = loadEnv(mode, (process as any).cwd(), '');
+  // Use process.cwd() with fallback/type-safety for Vercel build environment
+  const cwd = typeof process !== 'undefined' && (process as any).cwd ? (process as any).cwd() : '.';
+  const env = loadEnv(mode, cwd, '');
   
   return {
     plugins: [react()],

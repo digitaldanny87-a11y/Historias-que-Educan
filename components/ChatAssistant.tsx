@@ -42,19 +42,33 @@ const ChatAssistant: React.FC<ChatAssistantProps> = ({ onAddTopic, selectedTopic
   };
 
   const parseResponse = (text: string) => {
-    // Regex flexible: allows spaces/newlines around the JSON block
-    const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
     let cleanText = text;
     let suggestedTopics: string[] = [];
 
-    if (jsonMatch) {
+    // Try finding JSON block in markdown
+    const jsonBlockMatch = text.match(/```json\s*([\s\S]*?)\s*```/i);
+    
+    if (jsonBlockMatch) {
       try {
-        suggestedTopics = JSON.parse(jsonMatch[1]);
-        cleanText = text.replace(jsonMatch[0], '').trim();
+        suggestedTopics = JSON.parse(jsonBlockMatch[1]);
+        cleanText = text.replace(jsonBlockMatch[0], '').trim();
       } catch (e) {
-        console.error("Failed to parse topics JSON", e);
+        console.error("Failed to parse topics JSON block", e);
       }
+    } else {
+        // Fallback: Try finding a raw array pattern like ["topic1", "topic2"]
+        const rawArrayMatch = text.match(/\[\s*".*"\s*(?:,\s*".*"\s*)*\]/);
+        if (rawArrayMatch) {
+            try {
+                suggestedTopics = JSON.parse(rawArrayMatch[0]);
+                // We keep the text as is if it's mixed, or remove the array if it's at the end
+                cleanText = text.replace(rawArrayMatch[0], '').trim();
+            } catch (e) {
+                console.error("Failed to parse raw JSON array", e);
+            }
+        }
     }
+    
     return { cleanText, suggestedTopics };
   };
 
