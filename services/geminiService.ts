@@ -2,8 +2,7 @@ import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
 // Initialize AI client safely.
-const apiKey = process.env.API_KEY || "dummy_key_prevent_crash";
-const ai = new GoogleGenAI({ apiKey });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 const bookSchema: Schema = {
   type: Type.OBJECT,
