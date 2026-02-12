@@ -1,8 +1,10 @@
 import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
-// Initialize AI client. process.env.API_KEY is replaced by Vite during build.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// Initialize AI client safely.
+// We use a fallback to prevent immediate crash, but calls will fail if key is missing.
+const apiKey = process.env.API_KEY || "";
+const ai = new GoogleGenAI({ apiKey });
 
 const bookSchema: Schema = {
   type: Type.OBJECT,
@@ -72,6 +74,8 @@ const bookSchema: Schema = {
 
 // Función auxiliar para generar imagen
 async function generateCoverImage(prompt: string, style: string): Promise<string | undefined> {
+  if (!apiKey) return undefined;
+  
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
@@ -96,6 +100,10 @@ async function generateCoverImage(prompt: string, style: string): Promise<string
 }
 
 export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBook> => {
+  if (!apiKey) {
+    throw new Error("API Key no configurada. Por favor configura VITE_API_KEY o API_KEY en tu entorno.");
+  }
+
   const modelId = 'gemini-3-flash-preview';
   
   const prompt = `
@@ -170,6 +178,10 @@ export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBoo
 };
 
 export const createTopicChatSession = (): Chat => {
+  if (!apiKey) {
+      // Return a dummy object or throw a handled error to prevent crash
+      throw new Error("API Key missing for Chat");
+  }
   return ai.chats.create({
     model: 'gemini-3-flash-preview',
     config: {
