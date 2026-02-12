@@ -6,8 +6,16 @@ const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 const bookSchema: Schema = {
   type: Type.OBJECT,
   properties: {
-    title: { type: Type.STRING, description: "Un título creativo para el libro." },
-    description: { type: Type.STRING, description: "Una breve introducción motivadora para el niño." },
+    cover: {
+      type: Type.OBJECT,
+      properties: {
+        title: { type: Type.STRING, description: "Un título creativo y pegadizo para el libro." },
+        subtitle: { type: Type.STRING, description: "Un subtítulo motivador o descriptivo." },
+        visualDescription: { type: Type.STRING, description: "Una descripción detallada (prompt de imagen) para la portada basada en el estilo pedido." },
+        colorTheme: { type: Type.STRING, description: "Color hexadecimal principal para la portada." }
+      },
+      required: ["title", "subtitle", "visualDescription", "colorTheme"]
+    },
     pages: {
       type: Type.ARRAY,
       items: {
@@ -25,8 +33,21 @@ const bookSchema: Schema = {
             description: "El tipo de actividad de esta página."
           },
           title: { type: Type.STRING, description: "Título de la página/actividad." },
-          content: { type: Type.STRING, description: "El contenido principal: el texto de la historia, la pregunta matemática, o las instrucciones de dibujo." },
+          content: { type: Type.STRING, description: "El contenido principal. SI ES 'STORY', DEBE SEGUIR LAS REGLAS PEDAGÓGICAS ESTRICTAS." },
           hint: { type: Type.STRING, description: "Una pista pequeña y útil para el niño." },
+          imageDescription: { type: Type.STRING, description: "Descripción de la ilustración que acompaña a esta página." },
+          visualElements: {
+            type: Type.OBJECT,
+            description: "Elementos visuales clave para reforzar la memoria (Solo para páginas de tipo STORY).",
+            properties: {
+              personaje: { type: Type.STRING },
+              escenario: { type: Type.STRING },
+              objeto: { type: Type.STRING },
+              emocion: { type: Type.STRING },
+              accion: { type: Type.STRING }
+            },
+            nullable: true
+          },
           options: {
             type: Type.ARRAY,
             description: "Opciones para preguntas de tipo QUIZ.",
@@ -45,32 +66,73 @@ const bookSchema: Schema = {
       }
     }
   },
-  required: ["title", "description", "pages"]
+  required: ["cover", "pages"]
 };
+
+// Función auxiliar para generar imagen
+async function generateCoverImage(prompt: string, style: string): Promise<string | undefined> {
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          { text: `Genera una ilustración infantil de alta calidad, estilo ${style}. Descripción: ${prompt}. Sin texto, solo arte.` }
+        ]
+      }
+    });
+    
+    // Buscar la parte de la imagen en la respuesta
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return part.inlineData.data;
+      }
+    }
+    return undefined;
+  } catch (error) {
+    console.error("Error generating image:", error);
+    return undefined;
+  }
+}
 
 export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBook> => {
   const modelId = 'gemini-3-flash-preview';
   
   const prompt = `
-    Crea un libro de actividades didácticas para un niño llamado ${prefs.childName} de ${prefs.age} años.
-    El nivel de dificultad debe ser: ${prefs.difficulty}.
-    Los temas seleccionados son: ${prefs.topics.join(', ')}.
-    
-    El libro debe contener exactamente 6 páginas variadas.
-    
-    Instrucciones por tipo de página:
-    - STORY: Una historia muy corta (max 100 palabras) que incluya al niño como protagonista y los temas.
-    - QUIZ: Una pregunta relacionada con lo aprendido o cultura general acorde a la edad.
-    - MATH: Un problema matemático divertido adaptado a su edad (${prefs.age} años).
-    - DRAWING: Instrucciones creativas para que el niño dibuje algo en el espacio en blanco.
-    - VOCABULARY: 3 palabras relacionadas con el tema con sus definiciones simples.
-    
-    Asegúrate de que el tono sea animado, educativo y alentador.
-    Responde estrictamente en formato JSON.
+    Actúa como experto en pedagogía infantil y entrenamiento de memoria para niños.
+    Tu tarea es crear un libro JSON estructurado que contenga una historia personalizada y actividades.
+
+    PERFIL DEL NIÑO:
+    - Nombre: ${prefs.childName}
+    - Edad: ${prefs.age} años
+    - Intereses: ${prefs.topics.join(', ')}
+    - Misión Especial (Concepto a repetir): ${prefs.learningGoal || "Amistad y Memoria"}
+    - Escenario: ${prefs.setting || "Mundo Mágico"}
+    - Estilo Visual: ${prefs.visualStyle || "Cartoon"}
+    - Idea Portada: ${prefs.coverIdea || "Sorpresa"}
+
+    INSTRUCCIONES OBLIGATORIAS PARA LAS PÁGINAS DE TIPO "STORY":
+    1. La historia debe tener entre 200 y 300 palabras en total (distribuidas en las páginas de historia).
+    2. Usa el nombre "${prefs.childName}" dentro de la historia.
+    3. Repite el concepto principal (${prefs.learningGoal}) al menos 4 veces de forma natural.
+    4. Usa frases cortas y vocabulario adecuado para ${prefs.age} años.
+    5. No incluyas explicaciones académicas.
+    6. Termina la historia con una pregunta sencilla para activar memoria.
+    7. Mantén un tono cálido, creativo y motivador.
+
+    ESTRUCTURA DEL JSON (array de 'pages'):
+    1. STORY: Introducción pedagógica siguiendo las reglas anteriores. Incluye 'visualElements'.
+    2. VOCABULARY: 3 Palabras clave extraídas de la historia.
+    3. MATH: Un problema matemático simple integrado en el escenario de la historia.
+    4. DRAWING: Pide dibujar el 'objeto' o 'personaje' principal mencionado en 'visualElements'.
+    5. QUIZ: Pregunta sobre la historia para verificar atención.
+    6. STORY: Conclusión emotiva siguiendo las reglas pedagógicas.
+
+    Responde ESTRICTAMENTE en JSON siguiendo el esquema proporcionado.
   `;
 
   try {
-    const response = await ai.models.generateContent({
+    // 1. Generar Texto y Estructura
+    const textResponse = await ai.models.generateContent({
       model: modelId,
       contents: prompt,
       config: {
@@ -80,10 +142,26 @@ export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBoo
       }
     });
 
-    if (response.text) {
-      return JSON.parse(response.text) as GeneratedBook;
+    if (!textResponse.text) {
+      throw new Error("No se pudo generar el contenido del libro.");
     }
-    throw new Error("No se pudo generar el contenido.");
+
+    const bookData = JSON.parse(textResponse.text) as GeneratedBook;
+
+    // 2. Generar Imagen de Portada
+    // Usamos la descripción visual generada por el modelo de texto para crear la imagen
+    if (bookData.cover.visualDescription) {
+      const imageBase64 = await generateCoverImage(
+        bookData.cover.visualDescription, 
+        prefs.visualStyle || 'Cartoon'
+      );
+      if (imageBase64) {
+        bookData.coverImageBase64 = imageBase64;
+      }
+    }
+
+    return bookData;
+
   } catch (error) {
     console.error("Error generating book:", error);
     throw error;
@@ -95,15 +173,7 @@ export const createTopicChatSession = (): Chat => {
     model: 'gemini-3-flash-preview',
     config: {
       temperature: 0.7,
-      systemInstruction: `Eres un asistente experto en literatura infantil y educación para la app "EduBook AI".
-Tu objetivo es ayudar a los padres o maestros a elegir temas creativos para un libro de actividades personalizado.
-1. Pregunta por los intereses del niño si no los conoces.
-2. Basándote en la descripción, sugiere temas originales y divertidos (ej. "Dinosaurios Cocineros", "Viaje a Marte", "Matemáticas en la Selva").
-3. Si sugieres temas concretos para el libro, DEBES incluirlos al final de tu respuesta en un bloque de código JSON válido, así:
-\`\`\`json
-["Tema Sugerido 1", "Tema Sugerido 2"]
-\`\`\`
-Mantén un tono alegre y servicial.`
+      systemInstruction: `Eres un asistente experto en pedagogía infantil. Ayuda a definir objetivos de aprendizaje claros y sencillos.`
     }
   });
 };

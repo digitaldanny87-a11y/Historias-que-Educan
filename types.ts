@@ -11,6 +11,14 @@ export interface QuizOption {
   isCorrect: boolean;
 }
 
+export interface VisualElements {
+  personaje: string;
+  escenario: string;
+  objeto: string;
+  emocion: string;
+  accion: string;
+}
+
 export interface BookPage {
   type: ActivityType;
   title: string;
@@ -18,11 +26,20 @@ export interface BookPage {
   options?: QuizOption[]; // Only for QUIZ
   hint?: string; // Optional hint
   colorTheme?: string; // Hex code or tailwind class suggestion
+  imageDescription?: string; // Description of the illustration for this page
+  visualElements?: VisualElements; // Specific pedagogical visual keys
+}
+
+export interface BookCover {
+  title: string;
+  subtitle: string;
+  visualDescription: string; // Describes what the cover illustration looks like
+  colorTheme: string;
 }
 
 export interface GeneratedBook {
-  title: string;
-  description: string;
+  cover: BookCover;
+  coverImageBase64?: string; // Base64 string of the generated image
   pages: BookPage[];
 }
 
@@ -31,6 +48,10 @@ export interface UserPreferences {
   age: number;
   topics: string[];
   difficulty: 'Fácil' | 'Medio' | 'Difícil';
+  learningGoal?: string; // e.g., "Aprender a compartir", "Multiplicación"
+  setting?: string; // e.g., "En un bosque mágico", "En una nave espacial"
+  visualStyle?: string; // e.g., "Dibujos animados", "Acuarela", "Realista"
+  coverIdea?: string; // e.g., "Un dragón leyendo un libro"
 }
 
 export const AVAILABLE_TOPICS = [
