@@ -2,7 +2,10 @@ import { GoogleGenAI, Type, Schema, Chat } from "@google/genai";
 import { GeneratedBook, UserPreferences, ActivityType } from "../types";
 
 // Initialize AI client safely.
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+// We use a fallback key to prevent the app from crashing immediately on load 
+// if the environment variable is missing (common during build/deploy phase).
+const apiKey = process.env.API_KEY || "dummy_key_prevent_crash";
+const ai = new GoogleGenAI({ apiKey });
 
 const bookSchema: Schema = {
   type: Type.OBJECT,
@@ -72,7 +75,8 @@ const bookSchema: Schema = {
 
 // Función auxiliar para generar imagen
 async function generateCoverImage(prompt: string, style: string): Promise<string | undefined> {
-  if (!process.env.API_KEY) return undefined;
+  // Validamos que la API key sea real antes de llamar
+  if (!process.env.API_KEY || process.env.API_KEY.length < 10) return undefined;
   
   try {
     const response = await ai.models.generateContent({
@@ -98,8 +102,8 @@ async function generateCoverImage(prompt: string, style: string): Promise<string
 }
 
 export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBook> => {
-  if (!process.env.API_KEY) {
-    throw new Error("API Key no configurada. Por favor configura VITE_API_KEY o API_KEY en tu entorno.");
+  if (!process.env.API_KEY || process.env.API_KEY.length < 10) {
+    throw new Error("API Key no configurada o inválida. Por favor configura VITE_API_KEY o API_KEY en Vercel.");
   }
 
   const modelId = 'gemini-3-flash-preview';
@@ -176,7 +180,7 @@ export const generateBook = async (prefs: UserPreferences): Promise<GeneratedBoo
 };
 
 export const createTopicChatSession = (): Chat => {
-  if (!process.env.API_KEY) {
+  if (!process.env.API_KEY || process.env.API_KEY.length < 10) {
       // Return a dummy object or throw a handled error to prevent crash
       throw new Error("API Key missing for Chat");
   }
